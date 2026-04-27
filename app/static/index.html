@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BedSight</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: #f5f5f4; color: #1c1c1c; min-height: 100vh; padding: 40px 20px; }
+  .container { max-width: 520px; margin: 0 auto; }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+  .subtitle { font-size: 13px; color: #888; margin-bottom: 32px; }
+  .card { background: #fff; border: 1px solid #e5e5e5; border-radius: 12px; padding: 24px; margin-bottom: 16px; }
+  .card-title { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; color: #aaa; margin-bottom: 20px; }
+  .field { margin-bottom: 18px; }
+  label { display: block; font-size: 13px; font-weight: 500; color: #444; margin-bottom: 6px; }
+  select { width: 100%; padding: 9px 12px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: inherit; background: #fafafa; color: #1c1c1c; outline: none; }
+  select:focus { border-color: #999; }
+  input[type="range"] { width: 100%; accent-color: #1c1c1c; cursor: pointer; }
+  button { width: 100%; padding: 12px; background: #1c1c1c; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; font-family: inherit; cursor: pointer; transition: opacity 0.2s; }
+  button:hover { opacity: 0.85; }
+  button:disabled { opacity: 0.5; cursor: wait; }
+  .result-card { display: none; }
+  .util-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+  .util-number { font-size: 48px; font-weight: 600; line-height: 1; }
+  .risk-badge { font-size: 12px; font-weight: 500; padding: 4px 12px; border-radius: 100px; border: 1px solid; }
+  .bar-track { height: 6px; background: #f0f0f0; border-radius: 100px; overflow: hidden; margin-bottom: 20px; }
+  .bar-fill { height: 100%; border-radius: 100px; transition: width 0.8s ease; }
+  .drivers-title { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; color: #aaa; margin-bottom: 14px; }
+  .driver { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
+  .driver:last-child { border-bottom: none; }
+  .driver-name { color: #444; }
+  .driver-impact { font-weight: 500; }
+  .driver-impact.up { color: #e03e3e; }
+  .driver-impact.down { color: #2a9e6a; }
+  .error { font-size: 13px; color: #e03e3e; margin-top: 10px; display: none; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>BedSight</h1>
+  <p class="subtitle">Hospital bed occupancy predictor</p>
+ 
+  <div class="card">
+    <div class="card-title">Inputs</div>
+ 
+    <div class="field">
+      <label>Service</label>
+      <select id="service">
+        <option value="ICU">ICU</option>
+        <option value="emergency">Emergency</option>
+        <option value="surgery">Surgery</option>
+        <option value="general_medicine">General Medicine</option>
+      </select>
+    </div>
+ 
+    <div class="field">
+      <label>Event</label>
+      <select id="event">
+        <option value="none">None</option>
+        <option value="flu">Flu season</option>
+        <option value="strike">Staff strike</option>
+        <option value="holiday">Public holiday</option>
+      </select>
+    </div>
+ 
+    <div class="field">
+      <label>Staff morale — <span id="morale-val">70</span>/100</label>
+      <input type="range" id="staff_morale" min="0" max="100" value="70" step="1"
+             oninput="document.getElementById('morale-val').textContent=this.value">
+    </div>
+ 
+    <div class="field">
+      <label>Avg. length of stay — <span id="los-val">7</span> days</label>
+      <input type="range" id="avg_los" min="1" max="30" value="7" step="1"
+             oninput="document.getElementById('los-val').textContent=this.value">
+    </div>
+ 
+    <div class="field">
+      <label>Last week's occupancy — <span id="lag-val">75</span>%</label>
+      <input type="range" id="utilization_lag1" min="0" max="100" value="75" step="1"
+             oninput="document.getElementById('lag-val').textContent=this.value">
+    </div>
+ 
+    <div class="field">
+      <label>Staff on duty — <span id="staff-val">20</span></label>
+      <input type="range" id="staff_on_duty" min="1" max="60" value="20" step="1"
+             oninput="document.getElementById('staff-val').textContent=this.value">
+    </div>
+ 
+    <button id="btn" onclick="runPrediction()">Predict occupancy</button>
+    <p class="error" id="error">Could not reach the API. Is the server running?</p>
+  </div>
+ 
+  <div class="card result-card" id="result-card">
+    <div class="card-title">Prediction</div>
+    <div class="util-row">
+      <div class="util-number" id="util-number">—</div>
+      <div class="risk-badge" id="risk-badge">—</div>
+    </div>
+    <div class="bar-track">
+      <div class="bar-fill" id="bar-fill" style="width:0%"></div>
+    </div>
+    <div class="drivers-title">What's driving this</div>
+    <div id="drivers-list"></div>
+  </div>
+</div>
+
+<script>
+  const COLORS = { Critical:'#e03e3e', High:'#e07a3e', Moderate:'#c9a800', Normal:'#2a9e6a' };
+ 
+  async function runPrediction() {
+    const btn = document.getElementById('btn');
+    const err = document.getElementById('error');
+    err.style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = 'Predicting…';
+ 
+    const payload = {
+      service: document.getElementById('service').value,
+      event: document.getElementById('event').value,
+      staff_morale: parseFloat(document.getElementById('staff_morale').value),
+      avg_los: parseFloat(document.getElementById('avg_los').value),
+      utilization_lag1: parseFloat(document.getElementById('utilization_lag1').value) / 100,
+      staff_on_duty: parseInt(document.getElementById('staff_on_duty').value),
+      week: 53
+    };
+ 
+    try {
+      const res = await fetch('/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      renderResult(data);
+    } catch {
+      err.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Predict occupancy';
+    }
+  }
+ 
+  function renderResult(data) {
+    const color = COLORS[data.risk] || '#2a9e6a';
+ 
+    document.getElementById('util-number').textContent = data.utilization_pct;
+    document.getElementById('util-number').style.color = color;
+ 
+    const badge = document.getElementById('risk-badge');
+    badge.textContent = data.risk;
+    badge.style.color = color;
+    badge.style.borderColor = color;
+ 
+    document.getElementById('bar-fill').style.width = (data.utilization * 100) + '%';
+    document.getElementById('bar-fill').style.background = color;
+ 
+    const list = document.getElementById('drivers-list');
+    list.innerHTML = '';
+    data.drivers.forEach(d => {
+      const arrow = d.direction === 'up' ? '↑' : '↓';
+      const sign = d.direction === 'up' ? '+' : '';
+      const impact = (d.impact * 100).toFixed(1);
+      const el = document.createElement('div');
+      el.className = 'driver';
+      el.innerHTML = `<span class="driver-name">${d.feature}</span><span class="driver-impact ${d.direction}">${arrow} ${sign}${impact}%</span>`;
+      list.appendChild(el);
+    });
+ 
+    document.getElementById('result-card').style.display = 'block';
+  }
+</script>
+</body>
+</html>
+ 
