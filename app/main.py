@@ -20,7 +20,7 @@ features = artifact['features']
 explainer = shap.TreeExplainer(model)
 
 # static file to be mounted 
-# app.mount("/static", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "static")), name="static")
+app.mount("/static", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "static")), name="static")
 
 class PredictionRequest(BaseModel):
     service: str 
