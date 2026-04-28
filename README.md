@@ -22,6 +22,6 @@ uvicorn app.main:app --reload
 
 Then open http://localhost:8000 in your browser.
 
-
+![alt text](<Screenshot 2026-04-28 at 19.40.57.png>)
 
 ## Project Structure
