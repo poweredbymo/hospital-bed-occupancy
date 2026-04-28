@@ -37,7 +37,7 @@ def root():
 
 @app.post("/predict")
 def predict (req: PredictionRequest):
-    input_data= {cole: 0.0 for col in features}
+    input_data= {col: 0.0 for col in features}
     input_data.update({
         'week': req.week,
         'staff_morale': req.staff_morale,
@@ -104,7 +104,7 @@ def predict (req: PredictionRequest):
             "direction": "up" if impact > 0 else "down"
         })
 
-        return {
+    return {
             'utilization': round(pred,4),
             'utilization_pct': f"{pred:.1%}",
             'risk': risk,
