@@ -58,8 +58,9 @@ Input operational data for any service and get a utilization prediction with SHA
 
 ## Setup & Deployment 
 
+### Save Model Artifacts
+
 ```bash
-# Save model artifacts::
 import joblib
 joblib.dump(grid_search_final.best_estimator_, 'models/occupancy_model.pkl')
 joblib.dump(experimental_features_2, 'models/feature_cols.pkl')
