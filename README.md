@@ -4,7 +4,7 @@ An end-to-end Machine Learning solution designed to forecast hospital utilizatio
 ## Project Overview
 Traditional hospital forecasting often relies on "persistence" models (assuming next week looks like last week). This project implements a Gradient Boosting Regressor that identifies the underlying drivers of occupancy, allowing for proactive capacity management during operational shocks.
 
-## 🛠 Tech Stack
+## Tech Stack
 * **Language:** Python 3.9
 * **Modeling:** Scikit-Learn (Gradient Boosting Regressor), Pandas, NumPy
 * **Interpretability:** SHAP (TreeExplainer)
@@ -17,7 +17,7 @@ Traditional hospital forecasting often relies on "persistence" models (assuming 
 
 ### 1. Data Processing & Engineering
 The raw dataset was transformed into a structured time-series format through the following engineering steps:
-* **Calculated Length of Syau:** Derived patient-level metrics via $(Departure Date - Arrival Date)$.
+* **Calculated Length of Stay:** Derived patient-level metrics via (Departure Date - Arrival Date).
 * **Daily Occupancy:** Calculated by tracking overlapping patient date ranges to determine active bed counts.
 * **Weekly Aggregation:** Aggregated daily metrics and staffing data into a weekly grain to align with institutional planning cycles.
 * **Target Variable:** Defined **Utilization Rate** as the ratio of occupied beds to total capacity (scaled $0.0$ to $1.0$).
@@ -34,12 +34,27 @@ During initial development, the model achieved an unrealistic **MAE of 0.001**.
 
 ---
 
+## Evaluation & Insights
+
+### Service-Level Performance
+The model reveals that hospital volatility is not distributed equally:
+| Service | MAE (Error) | Insight |
+| :--- | :--- | :--- |
+| **Surgery** | `0.1695` | Highly volatile; dependent on elective scheduling shifts. |
+| **ICU** | `0.1401` | High error due to unpredictable emergency surges. |
+| **General Med** | `0.0863` | Stable; characterized by longer, predictable stays. |
+| **Emergency** | `0.0309` | Highly predictable; driven by consistent historical patterns. |
+
+### Residual Analysis
+Analysis of the residuals showed a **"Ceiling Effect"** near 100% utilization. The model tends to be slightly optimistic, acting as a high-water mark for capacity planning while sometimes missing sudden, sharp drops in occupancy.
+
+---
 
 
-# Hospital Occupancy Prediction API
+# Deployment and API Architecture 
 
-A FastAPI-powered inference service for the hospital bed occupancy ML model.
-Input operational data for any service and get a utilization prediction with SHAP-based explanations.
+The model is served via FastAPI-powered inference application. 
+Input operational data for any service and get a utilization prediction with SHAP-based explanations on top 5 drivers of the prediction. 
 
 ## Setup
 
@@ -61,3 +76,16 @@ Then open http://localhost:8000 in your browser.
 ![alt text](<Screenshot 2026-04-28 at 19.40.57.png>)
 
 ## Project Structure
+
+```text
+├── app/
+│   ├── main.py          # FastAPI server & SHAP logic
+│   ├──requirements.txt 
+│   └── static/          
+│       └── index.html        
+├── models/
+│   └── hospital_utilization_model_v1.pkl     
+├── notebooks/
+│   ├── 01_eda.ipynb     # Initial data exploration and feature engineering
+│   └── 02_modeling.ipynb # Model training, evaluation and packaging   
+└── Dockerfile
