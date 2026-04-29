@@ -40,9 +40,9 @@ During initial development, the model achieved an unrealistic **MAE of 0.001**.
 The model reveals that hospital volatility is not distributed equally:
 | Service | MAE (Error) | Insight |
 | :--- | :--- | :--- |
-| **Surgery** | `0.1695` | Highly volatile; dependent on elective scheduling shifts. |
+| **Surgery** | `0.1695` | Highly volatile, dependent on elective scheduling shifts. |
 | **ICU** | `0.1401` | High error due to unpredictable emergency surges. |
-| **General Med** | `0.0863` | Stable; characterized by longer, predictable stays. |
+| **General Med** | `0.0863` | Stable, characterized by longer, predictable stays. |
 | **Emergency** | `0.0309` | Highly predictable; driven by consistent historical patterns. |
 
 ### Residual Analysis
@@ -56,22 +56,36 @@ Analysis of the residuals showed a **"Ceiling Effect"** near 100% utilization. T
 The model is served via FastAPI-powered inference application. 
 Input operational data for any service and get a utilization prediction with SHAP-based explanations on top 5 drivers of the prediction. 
 
-## Setup
+## Setup & Deployment 
 
 ```bash
-# 1. Save model artifacts::
+# Save model artifacts::
 import joblib
 joblib.dump(grid_search_final.best_estimator_, 'models/occupancy_model.pkl')
 joblib.dump(experimental_features_2, 'models/feature_cols.pkl')
+```
 
-# 2. Install dependencies
+### Local Deployment 
+
+```bash
+# 1. Install dependencies
 pip install -r app/requirements.txt
 
-# 3. Run the server (from project root)
+# 2. Run the server (from project root)
 uvicorn app.main:app --reload
 ```
 
-Then open http://localhost:8000 in your browser.
+### Docker Deployment 
+
+```bash
+# 1.Build the image
+docker build -t occupancy-predictor .
+
+# 2. Run the container
+docker run -p 8000:8000 occupancy-predictor
+```
+
+Then open http://localhost:8000 in your browser and input operational data as seen below:
 
 ![alt text](<Screenshot 2026-04-28 at 19.40.57.png>)
 
