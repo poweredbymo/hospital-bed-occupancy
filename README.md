@@ -23,7 +23,7 @@ The raw dataset was transformed into a structured time-series format through the
 * **Target Variable:** Defined **Utilization Rate** as the ratio of occupied beds to total capacity (scaled $0.0$ to $1.0$).
 * **Temporal Features:** Engineered `utilization_lag1` (previous week's rate) and cyclical week numbers to capture seasonal trends.
 
-### Eliminating Data Leakage
+### 2. Eliminating Data Leakage
 During initial development, the model achieved an unrealistic **MAE of 0.001**.
 * **Diagnosis:** Post-event features (data only available *after* the target week ends) had leaked into the training set.
 * **The Fix:** I performed a "Leakage Audit," pruning features to ensure only $T-0$ (pre-event) data was available for training. This resulted in an **Honest Operational Model** with an MAE of **0.1067**.
@@ -60,10 +60,9 @@ Input operational data for any service and get a utilization prediction with SHA
 
 ### Save Model Artifacts
 
-```bash
+```python
 import joblib
-joblib.dump(grid_search_final.best_estimator_, 'models/occupancy_model.pkl')
-joblib.dump(experimental_features_2, 'models/feature_cols.pkl')
+joblib.dump({'model': final_model, 'features': experimental_features_2}, 'models/hospital_utilization_model_v1.pkl')
 ```
 
 ### Local Deployment 
