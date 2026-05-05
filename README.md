@@ -54,7 +54,7 @@ Analysis of the residuals showed a **"Ceiling Effect"** near 100% utilization. T
 # Deployment and API Architecture 
 
 The model is served via FastAPI-powered inference application. 
-Input operational data for any service and get a utilization prediction with SHAP-based explanations on top 5 drivers of the prediction. 
+Input operational data for any service and get a utilization prediction with SHAP-based explanations on the top 5 drivers of the prediction. 
 
 ## Setup & Deployment 
 
