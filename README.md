@@ -43,7 +43,7 @@ The model reveals that hospital volatility is not distributed equally:
 | **Surgery** | `0.1695` | Highly volatile, dependent on elective scheduling shifts. |
 | **ICU** | `0.1401` | High error due to unpredictable emergency surges. |
 | **General Med** | `0.0863` | Stable, characterized by longer, predictable stays. |
-| **Emergency** | `0.0309` | Highly predictable; driven by consistent historical patterns. |
+| **Emergency** | `0.0309` | Highly predictable, driven by consistent historical patterns. |
 
 ### Residual Analysis
 Analysis of the residuals showed a **"Ceiling Effect"** near 100% utilization. The model tends to be slightly optimistic, acting as a high-water mark for capacity planning while sometimes missing sudden, sharp drops in occupancy.
