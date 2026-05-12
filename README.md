@@ -1,5 +1,5 @@
 # Hospital Bed Occupancy Predictor 
-An end-to-end Machine Learning solution designed to forecast hospital utilization rates 12 weeks in advance. By moving beyond naive historical averages, this project integrates operational data (staffing, morale, and service types) to provide Explainable AI (XAI) insights for healthcare administrators.
+An end-to-end Machine Learning solution designed to forecast hospital utilization rates 12 weeks in advance. By moving beyond historical averages, this project integrates operational data (staffing, morale, and service types) to provide Explainable AI (XAI) insights for healthcare administrators.
 
 ## Project Overview
 Traditional hospital forecasting often relies on "persistence" models (assuming next week looks like last week). This project implements a Gradient Boosting Regressor that identifies the underlying drivers of occupancy, allowing for proactive capacity management during operational shocks.
